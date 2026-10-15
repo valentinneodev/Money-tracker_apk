@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Dein Kontobuch</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Press+Start+2P&display=swap');
+
+  :root {
+    --paper: #EEF0E7;
+    --card: #F8F8F1;
+    --ink: #1E2A22;
+    --ink-muted: #5C6B5F;
+    --line: #CBCEBA;
+    --income: #2F6E51;
+    --income-bg: #E3EDE3;
+    --expense: #A83A32;
+    --expense-bg: #F3E2DD;
+    --gold: #B98A2E;
+    --teal: #3E9C9C;
+    --arcade-bg: #241F1A;
+    --arcade-border: #161310;
+    --hud: #E8E2D0;
+    --hud-muted: #9B9282;
+    --cell-idle: #3B8F5C;
+    --signal: #E1483F;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #171A16;
+      --card: #21251F;
+      --ink: #EEF0E7;
+      --ink-muted: #9CA394;
+      --line: #3A3F35;
+      --income-bg: #1E2B23;
+      --expense-bg: #2E211E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #171A16;
+    --card: #21251F;
+    --ink: #EEF0E7;
+    --ink-muted: #9CA394;
+    --line: #3A3F35;
+    --income-bg: #1E2B23;
+    --expense-bg: #2E211E;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .num { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+  .serif { font-family: 'Source Serif 4', serif; }
+  .pixel { font-family: 'Press Start 2P', monospace; }
+  input, select, button { font-family: 'IBM Plex Sans', sans-serif; }
+  input:focus, select:focus, button:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 1px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+  .container { max-width: 768px; margin: 0 auto; padding: 32px 16px 48px; }
+  .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--ink-muted); margin-bottom: 8px; }
+  h1 { font-family: 'Source Serif 4', serif; font-size: 26px; font-weight: 600; margin: 0 0 20px; }
+  h2 { font-family: 'Source Serif 4', serif; font-size: 17px; font-weight: 600; margin: 0 0 10px; }
+  .balance-row { display: flex; align-items: baseline; justify-content: space-between; border-top: 1px solid var(--line); border-bottom: 3px double var(--ink); padding: 18px 0; margin-bottom: 32px; }
+  .balance-row .label { font-size: 13px; color: var(--ink-muted); font-family: 'IBM Plex Mono', monospace; }
+  .balance-row .value { font-family: 'IBM Plex Mono', monospace; font-size: 30px; font-weight: 600; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 32px; }
+  .tab-btn { flex: 1; border-radius: 999px; padding: 8px 0; font-size: 14px; font-weight: 500; cursor: pointer; background: transparent; color: var(--ink-muted); border: 1px solid var(--line); transition: all 0.15s ease; }
+  .tab-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  .panel { display: block; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .stat-box { border-radius: 8px; padding: 16px; }
+  .stat-box .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .stat-box .value { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; }
+
+  .type-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+  .type-btn { flex: 1; border-radius: 999px; padding: 8px 0; font-size: 14px; font-weight: 500; cursor: pointer; background: transparent; transition: all 0.15s ease; }
+  .type-btn.einnahme { border: 1px solid var(--income); color: var(--income); }
+  .type-btn.einnahme.active { background: var(--income); color: #fff; }
+  .type-btn.ausgabe { border: 1px solid var(--expense); color: var(--expense); }
+  .type-btn.ausgabe.active { background: var(--expense); color: #fff; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .col-span-2 { grid-column: span 2; }
+  label { display: block; font-size: 12px; margin-bottom: 4px; color: var(--ink-muted); }
+  input[type="text"], input[type="date"], select {
+    width: 100%; border-radius: 6px; padding: 8px 12px; font-size: 14px; border: 1px solid var(--line); background: #fff;
+  }
+  .btn-primary { width: 100%; border-radius: 6px; padding: 10px 0; font-size: 14px; font-weight: 500; background: var(--ink); color: var(--paper); border: none; cursor: pointer; }
+  .btn-outline { border-radius: 6px; padding: 8px 0; font-size: 14px; font-weight: 500; background: transparent; color: var(--ink); border: 1px solid var(--line); cursor: pointer; }
+  .error-text { font-size: 13px; color: var(--expense); margin-bottom: 12px; }
+
+  .pill-toggle { display: flex; gap: 4px; font-size: 12px; }
+  .pill-toggle button { padding: 4px 10px; border-radius: 999px; cursor: pointer; background: transparent; border: 1px solid var(--line); color: var(--ink-muted); }
+  .pill-toggle button.active.ausgabe { background: var(--expense); color: #fff; border-color: var(--expense); }
+  .pill-toggle button.active.einnahme { background: var(--income); color: #fff; border-color: var(--income); }
+
+  .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .bar-row .cat-name { font-size: 14px; width: 110px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { flex: 1; height: 8px; border-radius: 4px; background: var(--line); }
+  .bar-fill { height: 8px; border-radius: 4px; }
+  .bar-row .cat-amount { font-family: 'IBM Plex Mono', monospace; font-size: 14px; width: 80px; text-align: right; flex-shrink: 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 560px; }
+  th { text-align: left; padding: 8px 12px; font-weight: 500; color: var(--ink-muted); border-bottom: 1px solid var(--line); }
+  th.num-col { text-align: right; }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  td.num { text-align: right; }
+  tr:hover td { background: rgba(0,0,0,0.02); }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+  .del-btn { opacity: 0.55; background: none; border: none; cursor: pointer; color: var(--expense); }
+  .del-btn:hover { opacity: 1; }
+  .empty-box { border-radius: 8px; padding: 24px; text-align: center; font-size: 14px; color: var(--ink-muted); background: var(--card); border: 1px dashed var(--line); }
+
+  .arcade-panel { background-color: var(--arcade-bg); background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 14px 14px; border: 6px solid var(--arcade-border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  .arcade-btn { background: var(--gold); color: var(--arcade-bg); border: none; box-shadow: 0 4px 0 #7A5D1E; padding: 12px 16px; border-radius: 4px; cursor: pointer; transition: transform 0.08s ease, box-shadow 0.08s ease; font-size: 10px; }
+  .arcade-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #7A5D1E; }
+  .tap-cell { background: var(--cell-idle); border: 2px solid rgba(255,255,255,0.07); border-radius: 8px; cursor: pointer; transition: transform 0.08s ease; }
+  .tap-cell:active { transform: scale(0.92); }
+  @keyframes tapPulse {
+    0% { transform: scale(0.92); box-shadow: 0 0 0 rgba(225,72,58,0.2); }
+    100% { transform: scale(1.04); box-shadow: 0 0 18px rgba(225,72,58,0.8); }
+  }
+  .tap-cell.active { background: var(--signal); border-color: var(--signal); animation: tapPulse 0.4s ease-in-out infinite alternate; }
+
+  .footer-credit { text-align: center; margin-top: 40px; font-size: 10px; color: var(--ink-muted); opacity: 0.6; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="header"></div>
+
+  <div id="storage-warning" style="display:none; background:var(--expense-bg); color:var(--expense); border-radius:8px; padding:10px 14px; font-size:12px; margin-bottom:16px;">
+    Speicherung im Browser nicht verfügbar — Buchungen bleiben nur für diese Sitzung erhalten und gehen beim Schließen verloren.
+  </div>
+
+  <div id="account-switcher" class="card" style="display:none;"></div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="buch">Kontobuch</button>
+    <button class="tab-btn" data-tab="verlauf">Verläufe</button>
+    <button class="tab-btn" data-tab="spiel">Spiel</button>
+  </div>
+
+  <div id="panel-buch" class="panel">
+    <div id="summary-cards" class="grid-2"></div>
+
+    <form id="entry-form" class="card">
+      <div class="type-toggle">
+        <button type="button" class="type-btn ausgabe active" data-type="ausgabe">Ausgabe</button>
+        <button type="button" class="type-btn einnahme" data-type="einnahme">Einnahme</button>
+      </div>
+      <div class="form-grid">
+        <div class="col-span-2">
+          <label>Beschreibung</label>
+          <input type="text" id="f-description" placeholder="z. B. Wocheneinkauf" />
+        </div>
+        <div>
+          <label>Betrag (€)</label>
+          <input type="text" id="f-amount" class="num" inputmode="decimal" placeholder="0,00" />
+        </div>
+        <div>
+          <label>Datum</label>
+          <input type="date" id="f-date" class="num" />
+        </div>
+        <div class="col-span-2">
+          <label>Kategorie</label>
+          <select id="f-category"></select>
+        </div>
+        <div class="col-span-2" id="f-custom-wrap" style="display:none;">
+          <label>Sonstiges — was genau?</label>
+          <input type="text" id="f-custom" placeholder="z. B. Spende, Reparatur …" />
+        </div>
+      </div>
+      <div id="f-error" class="error-text" style="display:none;"></div>
+      <button type="submit" class="btn-primary">Buchung hinzufügen</button>
+    </form>
+
+    <div id="category-breakdown"></div>
+
+    <div class="card">
+      <h2 style="font-size:16px;">Backup</h2>
+      <p style="font-size:12px; color:var(--ink-muted); margin:0 0 12px;">Sichere deine Buchungen als Datei oder stelle ein Backup wieder her.</p>
+      <div style="display:flex; gap:8px;">
+        <button id="btn-export" class="btn-primary" style="flex:1;">Exportieren</button>
+        <button id="btn-import" class="btn-outline" style="flex:1;">Importieren</button>
+        <button id="btn-csv" class="btn-outline" style="flex:1;">CSV</button>
+        <input type="file" id="file-input" accept="application/json" style="display:none;" />
+      </div>
+      <div id="import-status" style="font-size:12px; margin-top:8px; display:none;"></div>
+    </div>
+
+    <h2>Buchungen</h2>
+    <input type="text" id="f-search" placeholder="Buchungen suchen …" style="margin-bottom:10px;" />
+    <div id="buchungen-table" style="margin-bottom: 12px;"></div>
+
+    <div id="reset-section" style="text-align:right; display:none;">
+      <button id="btn-reset" style="background:none; border:none; font-size:12px; cursor:pointer; color:var(--ink-muted);">Buchungen dieses Kontos zurücksetzen</button>
+    </div>
+
+    <div style="font-size:12px; text-align:center; margin-top:24px; color:var(--ink-muted);">
+      Deine Buchungen werden automatisch in diesem Browser gespeichert.
+    </div>
+  </div>
+
+  <div id="panel-verlauf" class="panel" style="display:none;">
+    <div id="verlauf-content"></div>
+  </div>
+
+  <div id="panel-spiel" class="panel" style="display:none;">
+    <div class="arcade-panel">
+      <div id="game-hud" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px;"></div>
+      <div id="game-body"></div>
+    </div>
+  </div>
+
+  <div class="footer-credit">Mit Vibecoding von Valentin Zmölnig</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- Storage (real browser localStorage, with in-memory fallback) ----------
+  var STORAGE_KEY = 'ledger-entries';
+  var ACCOUNTS_KEY = 'ledger-accounts';
+  var BEST_TIME_KEY = 'reflex-best-ms';
+
+  var memoryStore = {};
+  var storageAvailable = (function () {
+    try {
+      var testKey = '__storage_test__';
+      window.localStorage.setItem(testKey, '1');
+      window.localStorage.removeItem(testKey);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  })();
+
+  function storageGet(key) {
+    if (storageAvailable) {
+      try { return window.localStorage.getItem(key); } catch (e) { return Object.prototype.hasOwnProperty.call(memoryStore, key) ? memoryStore[key] : null; }
+    }
+    return Object.prototype.hasOwnProperty.call(memoryStore, key) ? memoryStore[key] : null;
+  }
+  function storageSet(key, value) {
+    if (storageAvailable) {
+      try { window.localStorage.setItem(key, value); return; } catch (e) {}
+    }
+    memoryStore[key] = value;
+  }
+
+  function loadAccounts() {
+    try {
+      var raw = storageGet(ACCOUNTS_KEY);
+      var list = raw ? JSON.parse(raw) : null;
+      if (!list || !list.length) {
+        list = [{ id: 'default', name: 'Hauptkonto' }];
+        storageSet(ACCOUNTS_KEY, JSON.stringify(list));
+      }
+      return list;
+    } catch (e) {
+      return [{ id: 'default', name: 'Hauptkonto' }];
+    }
+  }
+  function saveAccounts(list) {
+    try { storageSet(ACCOUNTS_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+
+  function loadEntries() {
+    try {
+      var raw = storageGet(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+  function saveEntries(list) {
+    try { storageSet(STORAGE_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+  function loadBestMs() {
+    try {
+      var v = storageGet(BEST_TIME_KEY);
+      var n = v ? parseInt(v, 10) : NaN;
+      return isNaN(n) ? null : n;
+    } catch (e) { return null; }
+  }
+  function saveBestMs(v) {
+    try { storageSet(BEST_TIME_KEY, String(v)); } catch (e) {}
+  }
+
+  // ---------- Helpers ----------
+  var INCOME_CATEGORIES = ['Gehalt', 'Freelance', 'Verkauf', 'Geschenk', 'Sonstiges'];
+  var EXPENSE_CATEGORIES = ['Miete', 'Lebensmittel', 'Transport', 'Freizeit', 'Versicherung', 'Gesundheit', 'Sonstiges'];
+
+  function fmt(n) {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n);
+  }
+  function todayISO() { return new Date().toISOString().slice(0, 10); }
+  function fmtDate(iso) {
+    var d = new Date(iso + 'T00:00:00');
+    return new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
+  }
+  function fmtMonth(key) {
+    var d = new Date(key + '-01T00:00:00');
+    return new Intl.DateTimeFormat('de-DE', { month: 'short', year: '2-digit' }).format(d);
+  }
+  function fmtMs(ms) { return ms + ' ms'; }
+  function fmtSec(ms) { return (ms / 1000).toFixed(3).replace('.', ',') + ' s'; }
+  function uid() { return Date.now() + '-' + Math.random().toString(36).slice(2, 8); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  // ---------- State ----------
+  var accounts = loadAccounts();
+  var entries = loadEntries();
+  var activeAccountId = accounts[0].id;
+  var activeTab = 'buch';
+  var type = 'ausgabe';
+  var breakdownTab = 'ausgabe';
+  var confirmReset = false;
+  var resetTimer = null;
+  var confirmDeleteAccountId = null;
+  var confirmDeleteAccountTimer = null;
+  var showAddAccountForm = false;
+  var searchQuery = '';
+
+  // migrate entries saved before multi-account support existed
+  (function migrateEntries() {
+    var changed = false;
+    entries = entries.map(function (e) {
+      if (e.accountId) return e;
+      changed = true;
+      return Object.assign({}, e, { accountId: accounts[0].id });
+    });
+    if (changed) saveEntries(entries);
+  })();
+
+  function activeAccountName() {
+    var acc = accounts.filter(function (a) { return a.id === activeAccountId; })[0];
+    return acc ? acc.name : '';
+  }
+  function currentEntries() {
+    return entries.filter(function (e) { return e.accountId === activeAccountId; });
+  }
+
+  var game = {
+    state: 'idle', // idle | running | result
+    visible: false,
+    reactionMs: null,
+    bestMs: loadBestMs(),
+    isNewBest: false,
+    isFalseStart: false,
+    timer: null,
+    spawnAt: 0,
+  };
+
+  // ---------- Derived data ----------
+  function computeLedger() {
+    var sorted = currentEntries().slice().sort(function (a, b) {
+      if (a.date === b.date) return a.id < b.id ? -1 : 1;
+      return a.date < b.date ? -1 : 1;
+    });
+    var running = 0, ti = 0, te = 0;
+    var withBalance = sorted.map(function (e) {
+      running += e.type === 'einnahme' ? e.amount : -e.amount;
+      if (e.type === 'einnahme') ti += e.amount; else te += e.amount;
+      return Object.assign({}, e, { runningBalance: running });
+    });
+    return {
+      rows: withBalance.slice().reverse(),
+      chronological: withBalance,
+      totalIncome: ti,
+      totalExpense: te,
+      balance: running,
+    };
+  }
+
+  function computeBreakdown() {
+    var map = {};
+    currentEntries().filter(function (e) { return e.type === breakdownTab; }).forEach(function (e) {
+      map[e.category] = (map[e.category] || 0) + e.amount;
+    });
+    var list = Object.keys(map).map(function (k) { return { category: k, total: map[k] }; });
+    list.sort(function (a, b) { return b.total - a.total; });
+    var max = list.length ? list[0].total : 0;
+    return { list: list, max: max };
+  }
+
+  function computeMonthly() {
+    var map = {};
+    currentEntries().forEach(function (e) {
+      var key = e.date.slice(0, 7);
+      if (!map[key]) map[key] = { key: key, income: 0, expense: 0 };
+      if (e.type === 'einnahme') map[key].income += e.amount; else map[key].expense += e.amount;
+    });
+    var list = Object.keys(map).map(function (k) { return map[k]; });
+    list.sort(function (a, b) { return a.key < b.key ? -1 : 1; });
+    return list;
+  }
+
+  // ---------- Rendering: header ----------
+  function renderHeader() {
+    var header = document.getElementById('header');
+    if (activeTab !== 'spiel') {
+      var balance = computeLedger().balance;
+      header.innerHTML =
+        '<div class="eyebrow">Hauptbuch · ' + esc(activeAccountName()) + '</div>' +
+        '<h1>Dein Kontobuch</h1>' +
+        '<div class="balance-row"><span class="label">Saldo per ' + fmtDate(todayISO()) + '</span>' +
+        '<span class="value" style="color:' + (balance >= 0 ? 'var(--income)' : 'var(--expense)') + '">' + fmt(balance) + '</span></div>';
+    } else {
+      header.innerHTML =
+        '<div class="eyebrow">Nur zum Spaß · keine Buchung</div>' +
+        '<h1>Reflex-Tipper</h1>';
+    }
+  }
+
+  function renderAccounts() {
+    var wrap = document.getElementById('account-switcher');
+    wrap.style.display = activeTab === 'buch' ? 'block' : 'none';
+    if (activeTab !== 'buch') return;
+    var html = '<div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">';
+    accounts.forEach(function (acc) {
+      var isActive = acc.id === activeAccountId;
+      var pendingDelete = acc.id === confirmDeleteAccountId;
+      html += '<div style="display:flex; align-items:center; gap:2px;">' +
+        '<button data-account="' + acc.id + '" style="border-radius:999px; padding:6px 14px; font-size:13px; cursor:pointer; border:1px solid ' + (isActive ? 'var(--ink)' : 'var(--line)') + '; background:' + (isActive ? 'var(--ink)' : 'transparent') + '; color:' + (isActive ? 'var(--paper)' : 'var(--ink-muted)') + ';">' + esc(acc.name) + '</button>';
+      if (accounts.length > 1) {
+        html += pendingDelete
+          ? '<button data-confirm-delete-account="' + acc.id + '" style="background:var(--expense); border:none; color:#fff; cursor:pointer; font-size:11px; padding:5px 8px; border-radius:999px;">Wirklich?</button>'
+          : '<button data-delete-account="' + acc.id + '" aria-label="Konto löschen" style="background:none; border:none; color:var(--ink-muted); cursor:pointer; font-size:13px; padding:4px;">✕</button>';
+      }
+      html += '</div>';
+    });
+    html += showAddAccountForm
+      ? '<span style="display:flex; gap:4px; align-items:center;">' +
+        '<input type="text" id="new-account-name" placeholder="Kontoname" style="width:120px; border-radius:6px; padding:6px 10px; font-size:13px; border:1px solid var(--line); background:#fff;" />' +
+        '<button id="btn-confirm-add-account" style="border-radius:999px; padding:6px 12px; font-size:13px; cursor:pointer; border:none; background:var(--ink); color:var(--paper);">OK</button>' +
+        '</span>'
+      : '<button id="btn-add-account" style="border-radius:999px; padding:6px 14px; font-size:13px; cursor:pointer; border:1px dashed var(--line); background:transparent; color:var(--ink-muted);">+ Konto</button>';
+    html += '</div>';
+    if (accounts.length > 1) {
+      var total = accounts.reduce(function (sum, acc) {
+        var bal = entries.filter(function (e) { return e.accountId === acc.id; })
+          .reduce(function (s, e) { return s + (e.type === 'einnahme' ? e.amount : -e.amount); }, 0);
+        return sum + bal;
+      }, 0);
+      html += '<div style="font-size:12px; color:var(--ink-muted); margin-top:10px;">Gesamtsaldo aller Konten: <span class="num" style="font-weight:600; color:var(--ink);">' + fmt(total) + '</span></div>';
+    }
+    wrap.innerHTML = html;
+    if (showAddAccountForm) {
+      var input = document.getElementById('new-account-name');
+      input.focus();
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); confirmAddAccount(); } });
+    }
+  }
+
+  function confirmAddAccount() {
+    var input = document.getElementById('new-account-name');
+    var name = input ? input.value.trim() : '';
+    if (!name) { showAddAccountForm = false; renderAccounts(); return; }
+    var newAcc = { id: uid(), name: name };
+    accounts.push(newAcc);
+    saveAccounts(accounts);
+    activeAccountId = newAcc.id;
+    showAddAccountForm = false;
+    refreshDataViews();
+  }
+
+  // ---------- Rendering: Kontobuch ----------
+  function renderSummary() {
+    var l = computeLedger();
+    document.getElementById('summary-cards').innerHTML =
+      '<div class="stat-box" style="background:var(--income-bg);"><div class="label" style="color:var(--income);">Einnahmen</div><div class="value" style="color:var(--income);">' + fmt(l.totalIncome) + '</div></div>' +
+      '<div class="stat-box" style="background:var(--expense-bg);"><div class="label" style="color:var(--expense);">Ausgaben</div><div class="value" style="color:var(--expense);">' + fmt(l.totalExpense) + '</div></div>';
+  }
+
+  function currentCategories() { return type === 'einnahme' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES; }
+
+  function rebuildCategorySelect() {
+    var sel = document.getElementById('f-category');
+    var cats = currentCategories();
+    sel.innerHTML = cats.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
+    toggleCustomField();
+  }
+
+  function toggleCustomField() {
+    var sel = document.getElementById('f-category');
+    var wrap = document.getElementById('f-custom-wrap');
+    if (sel.value === 'Sonstiges') { wrap.style.display = 'block'; }
+    else { wrap.style.display = 'none'; document.getElementById('f-custom').value = ''; }
+  }
+
+  function renderBreakdown() {
+    var b = computeBreakdown();
+    var html = '<div class="card"><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">' +
+      '<h2 style="margin:0;">Nach Kategorie</h2>' +
+      '<div class="pill-toggle">' +
+      '<button data-breakdown="ausgabe" class="' + (breakdownTab === 'ausgabe' ? 'active ausgabe' : '') + '">Ausgaben</button>' +
+      '<button data-breakdown="einnahme" class="' + (breakdownTab === 'einnahme' ? 'active einnahme' : '') + '">Einnahmen</button>' +
+      '</div></div>';
+    if (b.list.length === 0) {
+      html += '<div style="font-size:14px; color:var(--ink-muted);">Noch keine ' + (breakdownTab === 'ausgabe' ? 'Ausgaben' : 'Einnahmen') + ' erfasst.</div>';
+    } else {
+      b.list.forEach(function (item) {
+        var pct = b.max ? (item.total / b.max) * 100 : 0;
+        var color = breakdownTab === 'ausgabe' ? 'var(--expense)' : 'var(--income)';
+        html += '<div class="bar-row"><div class="cat-name">' + esc(item.category) + '</div>' +
+          '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%; background:' + color + ';"></div></div>' +
+          '<div class="cat-amount num">' + fmt(item.total) + '</div></div>';
+      });
+    }
+    html += '</div>';
+    document.getElementById('category-breakdown').innerHTML = html;
+  }
+
+  function renderTable() {
+    var l = computeLedger();
+    var el = document.getElementById('buchungen-table');
+    if (l.rows.length === 0) {
+      el.innerHTML = '<div class="empty-box">Noch keine Einträge. Trag deine erste Buchung oben ein.</div>';
+      document.getElementById('reset-section').style.display = 'none';
+      return;
+    }
+    var q = searchQuery.trim().toLowerCase();
+    var shown = q ? l.rows.filter(function (r) {
+      return (r.description + ' ' + r.category).toLowerCase().indexOf(q) !== -1;
+    }) : l.rows;
+    if (shown.length === 0) {
+      el.innerHTML = '<div class="empty-box">Keine Treffer für „' + esc(searchQuery) + '“.</div>';
+      document.getElementById('reset-section').style.display = 'block';
+      return;
+    }
+    var rowsHtml = shown.map(function (r) {
+      return '<tr>' +
+        '<td class="num" style="color:var(--ink-muted); white-space:nowrap;">' + fmtDate(r.date) + '</td>' +
+        '<td>' + esc(r.description) + '</td>' +
+        '<td style="color:var(--ink-muted);">' + esc(r.category) + '</td>' +
+        '<td class="num" style="color:var(--income);">' + (r.type === 'einnahme' ? fmt(r.amount) : '') + '</td>' +
+        '<td class="num" style="color:var(--expense);">' + (r.type === 'ausgabe' ? fmt(r.amount) : '') + '</td>' +
+        '<td class="num" style="font-weight:600;">' + fmt(r.runningBalance) + '</td>' +
+        '<td style="text-align:right;"><button class="del-btn" data-delete="' + r.id + '" aria-label="Buchung löschen">✕</button></td>' +
+        '</tr>';
+    }).join('');
+    el.innerHTML = '<div class="table-wrap"><table><thead><tr>' +
+      '<th>Datum</th><th>Beschreibung</th><th>Kategorie</th><th class="num-col">Einnahme</th><th class="num-col">Ausgabe</th><th class="num-col">Saldo</th><th></th>' +
+      '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>';
+    document.getElementById('reset-section').style.display = 'block';
+  }
+
+  function refreshDataViews() {
+    renderHeader();
+    renderAccounts();
+    renderSummary();
+    renderBreakdown();
+    renderTable();
+    renderVerlauf();
+  }
+
+  // ---------- Rendering: Verläufe (hand-drawn SVG) ----------
+  function renderVerlauf() {
+    var el = document.getElementById('verlauf-content');
+    if (entries.length === 0) {
+      el.innerHTML = '<div class="empty-box">Noch keine Buchungen für einen Verlauf. Trag zuerst ein paar Einträge im Kontobuch ein.</div>';
+      return;
+    }
+    var l = computeLedger();
+    var chrono = l.chronological;
+    var w = 680, h = 200, pad = 24;
+    var values = chrono.map(function (e) { return e.runningBalance; });
+    var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+    if (min === max) { min -= 1; max += 1; }
+    var points = chrono.map(function (e, i) {
+      var x = chrono.length > 1 ? pad + (i / (chrono.length - 1)) * (w - pad * 2) : w / 2;
+      var y = pad + (1 - (e.runningBalance - min) / (max - min)) * (h - pad * 2);
+      return x + ',' + y;
+    }).join(' ');
+
+    var monthly = computeMonthly();
+    var maxMonthly = 0;
+    monthly.forEach(function (m) { maxMonthly = Math.max(maxMonthly, m.income, m.expense); });
+
+    var monthlyHtml = monthly.map(function (m) {
+      var incPct = maxMonthly ? (m.income / maxMonthly) * 100 : 0;
+      var expPct = maxMonthly ? (m.expense / maxMonthly) * 100 : 0;
+      return '<div style="margin-bottom:10px;">' +
+        '<div style="font-size:12px; color:var(--ink-muted); margin-bottom:4px;">' + fmtMonth(m.key) + '</div>' +
+        '<div class="bar-row" style="margin-bottom:3px;"><div class="cat-name" style="width:70px; color:var(--income);">Einnahmen</div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + incPct + '%; background:var(--income);"></div></div>' +
+        '<div class="cat-amount num">' + fmt(m.income) + '</div></div>' +
+        '<div class="bar-row"><div class="cat-name" style="width:70px; color:var(--expense);">Ausgaben</div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + expPct + '%; background:var(--expense);"></div></div>' +
+        '<div class="cat-amount num">' + fmt(m.expense) + '</div></div></div>';
+    }).join('');
+
+    el.innerHTML =
+      '<h2>Saldo im Verlauf</h2>' +
+      '<p style="font-size:12px; color:var(--ink-muted); margin:0 0 10px;">Kontostand nach jeder Buchung, chronologisch.</p>' +
+      '<div class="card"><svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%; height:auto; display:block;">' +
+      '<polyline points="' + points + '" fill="none" stroke="var(--ink)" stroke-width="2" /></svg></div>' +
+      '<h2 style="margin-top:24px;">Einnahmen &amp; Ausgaben pro Monat</h2>' +
+      '<div class="card">' + monthlyHtml + '</div>';
+  }
+
+  // ---------- Rendering: Spiel ----------
+  var MIN_WAIT = 500, MAX_WAIT = 2200;
+
+  function clearGameTimer() {
+    if (game.timer) { clearTimeout(game.timer); game.timer = null; }
+  }
+  function showTarget() {
+    game.spawnAt = Date.now();
+    game.visible = true;
+    renderGame();
+  }
+  function scheduleWait() {
+    game.visible = false;
+    clearGameTimer();
+    var wait = MIN_WAIT + Math.random() * (MAX_WAIT - MIN_WAIT);
+    game.timer = setTimeout(showTarget, wait);
+    renderGame();
+  }
+  function startGame() {
+    clearGameTimer();
+    game.state = 'running';
+    game.reactionMs = null;
+    game.isNewBest = false;
+    game.isFalseStart = false;
+    scheduleWait();
+  }
+  function handleTap() {
+    if (game.state !== 'running') return;
+    clearGameTimer();
+    if (!game.visible) {
+      game.visible = false;
+      game.reactionMs = null;
+      game.isFalseStart = true;
+      game.state = 'result';
+      renderGame();
+      return;
+    }
+    var elapsed = Date.now() - game.spawnAt;
+    game.visible = false;
+    game.reactionMs = elapsed;
+    game.isFalseStart = false;
+    game.state = 'result';
+    var isNew = game.bestMs == null || elapsed < game.bestMs;
+    game.isNewBest = isNew;
+    if (isNew) { game.bestMs = elapsed; saveBestMs(elapsed); }
+    renderGame();
+  }
+
+  function renderGame() {
+    document.getElementById('game-hud').innerHTML =
+      '<div style="display:flex; gap:20px;">' +
+      '<div><div class="pixel" style="font-size:9px; color:var(--hud-muted); margin-bottom:4px;">LETZTE ZEIT</div><div class="pixel" style="font-size:13px; color:var(--hud);">' + (game.reactionMs != null ? fmtMs(game.reactionMs) : '–') + '</div></div>' +
+      '<div><div class="pixel" style="font-size:9px; color:var(--hud-muted); margin-bottom:4px;">BESTZEIT</div><div class="pixel" style="font-size:13px; color:var(--gold);">' + (game.bestMs != null ? fmtMs(game.bestMs) : '–') + '</div></div>' +
+      '</div>' +
+      '<button id="btn-game" class="arcade-btn pixel">' + (game.state === 'idle' ? 'START' : game.state === 'result' ? 'NOCHMAL' : 'RESET') + '</button>';
+    document.getElementById('btn-game').addEventListener('click', startGame);
+
+    var body = document.getElementById('game-body');
+    if (game.state === 'idle') {
+      body.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; text-align:center; font-size:14px; color:var(--hud-muted); min-height:min(90vw,440px); padding:0 16px;">' +
+        'Drück Start. Die Kachel wird nach einer zufälligen Wartezeit rot — dann so schnell wie möglich antippen. Danach siehst du direkt deine Reaktionszeit.</div>';
+    } else if (game.state === 'running') {
+      body.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; min-height:min(90vw,440px);">' +
+        '<button id="tap-tile" class="tap-cell' + (game.visible ? ' active' : '') + '" style="width:100%; max-width:420px; aspect-ratio:1/1;" aria-label="Kachel antippen"></button></div>';
+      document.getElementById('tap-tile').addEventListener('click', handleTap);
+    } else if (game.state === 'result') {
+      if (game.isFalseStart) {
+        body.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:min(90vw,440px);">' +
+          '<div class="pixel" style="color:var(--expense); font-size:13px; margin-bottom:12px;">ZU FRÜH</div>' +
+          '<div class="pixel" style="color:var(--expense); font-size:28px;">0</div>' +
+          '<div style="font-size:14px; color:var(--hud-muted); margin-top:8px;">0 Punkte — war noch grün</div></div>';
+      } else {
+        body.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:min(90vw,440px);">' +
+          (game.isNewBest ? '<div class="pixel" style="color:var(--teal); font-size:10px; margin-bottom:12px;">NEUE BESTZEIT!</div>' : '') +
+          '<div class="pixel" style="color:var(--gold); font-size:28px;">' + fmtMs(game.reactionMs) + '</div>' +
+          '<div style="font-size:14px; color:var(--hud-muted); margin-top:8px;">' + fmtSec(game.reactionMs) + '</div></div>';
+      }
+    }
+  }
+
+  function saveFile(filename, text) {
+    var cap = window.Capacitor;
+    if (cap && cap.isNativePlatform && cap.isNativePlatform() && cap.Plugins && cap.Plugins.Filesystem && cap.Plugins.Share) {
+      cap.Plugins.Filesystem.writeFile({ path: filename, data: text, directory: 'CACHE', encoding: 'utf8' })
+        .then(function (r) { return cap.Plugins.Share.share({ title: filename, url: r.uri }); })
+        .catch(function () {});
+      return;
+    }
+    var getDl = (window.claude && window.claude.use) ? window.claude.use('downloads') : Promise.resolve(null);
+    Promise.resolve(getDl).then(function (dl) {
+      if (dl) return dl.save({ filename: filename, data: text }).catch(function () {});
+      var blob = new Blob([text], { type: 'text/plain' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }).catch(function () {});
+  }
+
+  function csvCell(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }
+  function exportCsv() {
+    var lines = [['Konto', 'Datum', 'Typ', 'Kategorie', 'Beschreibung', 'Betrag'].map(csvCell).join(';')];
+    entries.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }).forEach(function (e) {
+      var acc = accounts.filter(function (a) { return a.id === e.accountId; })[0];
+      lines.push([acc ? acc.name : '', e.date, e.type === 'einnahme' ? 'Einnahme' : 'Ausgabe', e.category, e.description,
+        (e.type === 'einnahme' ? '' : '-') + String(e.amount).replace('.', ',')].map(csvCell).join(';'));
+    });
+    saveFile('kontobuch-' + todayISO() + '.csv', '\uFEFF' + lines.join('\r\n'));
+  }
+
+  // ---------- Event wiring ----------
+  document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      activeTab = btn.getAttribute('data-tab');
+      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('panel-buch').style.display = activeTab === 'buch' ? 'block' : 'none';
+      document.getElementById('panel-verlauf').style.display = activeTab === 'verlauf' ? 'block' : 'none';
+      document.getElementById('panel-spiel').style.display = activeTab === 'spiel' ? 'block' : 'none';
+      renderHeader();
+      renderAccounts();
+    });
+  });
+
+  document.querySelectorAll('.type-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      type = btn.getAttribute('data-type');
+      document.querySelectorAll('.type-btn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      rebuildCategorySelect();
+    });
+  });
+
+  document.getElementById('f-category').addEventListener('change', toggleCustomField);
+
+  document.getElementById('entry-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var descEl = document.getElementById('f-description');
+    var amtEl = document.getElementById('f-amount');
+    var dateEl = document.getElementById('f-date');
+    var catEl = document.getElementById('f-category');
+    var customEl = document.getElementById('f-custom');
+    var errEl = document.getElementById('f-error');
+
+    var description = descEl.value.trim();
+    var amt = parseFloat(String(amtEl.value).replace(',', '.'));
+    var date = dateEl.value || todayISO();
+    var category = catEl.value;
+
+    function showErr(msg) { errEl.textContent = msg; errEl.style.display = 'block'; }
+
+    if (!description) { showErr('Bitte eine Beschreibung eintragen.'); return; }
+    if (!amt || amt <= 0) { showErr('Bitte einen Betrag größer als 0 eintragen.'); return; }
+    if (category === 'Sonstiges' && !customEl.value.trim()) { showErr('Bitte kurz angeben, was "Sonstiges" ist.'); return; }
+
+    var finalCategory = category === 'Sonstiges' ? customEl.value.trim() : category;
+    entries.push({
+      id: uid(), date: date, description: description, category: finalCategory, type: type,
+      amount: Math.round(amt * 100) / 100, accountId: activeAccountId,
+    });
+    saveEntries(entries);
+
+    descEl.value = ''; amtEl.value = ''; customEl.value = '';
+    errEl.style.display = 'none';
+    toggleCustomField();
+    refreshDataViews();
+  });
+
+  document.getElementById('category-breakdown').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-breakdown]');
+    if (!btn) return;
+    breakdownTab = btn.getAttribute('data-breakdown');
+    renderBreakdown();
+  });
+
+  document.getElementById('buchungen-table').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-delete]');
+    if (!btn) return;
+    var id = btn.getAttribute('data-delete');
+    entries = entries.filter(function (en) { return en.id !== id; });
+    saveEntries(entries);
+    refreshDataViews();
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', function () {
+    var btn = document.getElementById('btn-reset');
+    if (!confirmReset) {
+      confirmReset = true;
+      btn.textContent = 'Wirklich alle Buchungen dieses Kontos löschen? Nochmal klicken.';
+      btn.style.color = 'var(--expense)';
+      resetTimer = setTimeout(function () {
+        confirmReset = false;
+        btn.textContent = 'Buchungen dieses Kontos zurücksetzen';
+        btn.style.color = 'var(--ink-muted)';
+      }, 3000);
+      return;
+    }
+    clearTimeout(resetTimer);
+    entries = entries.filter(function (e) { return e.accountId !== activeAccountId; });
+    saveEntries(entries);
+    confirmReset = false;
+    refreshDataViews();
+  });
+
+  document.getElementById('account-switcher').addEventListener('click', function (e) {
+    var chip = e.target.closest('[data-account]');
+    if (chip) {
+      activeAccountId = chip.getAttribute('data-account');
+      confirmDeleteAccountId = null;
+      showAddAccountForm = false;
+      refreshDataViews();
+      return;
+    }
+    var delBtn = e.target.closest('[data-delete-account]');
+    if (delBtn) {
+      confirmDeleteAccountId = delBtn.getAttribute('data-delete-account');
+      clearTimeout(confirmDeleteAccountTimer);
+      confirmDeleteAccountTimer = setTimeout(function () {
+        confirmDeleteAccountId = null;
+        renderAccounts();
+      }, 3000);
+      renderAccounts();
+      return;
+    }
+    var confirmDelBtn = e.target.closest('[data-confirm-delete-account]');
+    if (confirmDelBtn) {
+      var id = confirmDelBtn.getAttribute('data-confirm-delete-account');
+      clearTimeout(confirmDeleteAccountTimer);
+      confirmDeleteAccountId = null;
+      accounts = accounts.filter(function (a) { return a.id !== id; });
+      entries = entries.filter(function (en) { return en.accountId !== id; });
+      saveAccounts(accounts);
+      saveEntries(entries);
+      if (activeAccountId === id) activeAccountId = accounts[0].id;
+      refreshDataViews();
+      return;
+    }
+    if (e.target.closest('#btn-add-account')) {
+      showAddAccountForm = true;
+      renderAccounts();
+      return;
+    }
+    if (e.target.closest('#btn-confirm-add-account')) {
+      confirmAddAccount();
+    }
+  });
+
+  document.getElementById('btn-export').addEventListener('click', function () {
+    var payload = { exportedAt: new Date().toISOString(), accounts: accounts, entries: entries };
+    saveFile('kontobuch-backup-' + todayISO() + '.json', JSON.stringify(payload, null, 2));
+  });
+
+  document.getElementById('f-search').addEventListener('input', function (e) {
+    searchQuery = e.target.value;
+    renderTable();
+  });
+
+  document.getElementById('btn-csv').addEventListener('click', exportCsv);
+
+  document.getElementById('btn-import').addEventListener('click', function () {
+    document.getElementById('file-input').click();
+  });
+
+  document.getElementById('file-input').addEventListener('change', function (e) {
+    var file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (evt) {
+      var statusEl = document.getElementById('import-status');
+      try {
+        var parsed = JSON.parse(evt.target.result);
+        var imported = Array.isArray(parsed) ? parsed : parsed.entries;
+        if (!Array.isArray(imported)) throw new Error('invalid');
+        var valid = imported.every(function (it) {
+          return it && typeof it.amount === 'number' && (it.type === 'einnahme' || it.type === 'ausgabe') && it.date;
+        });
+        if (!valid) throw new Error('invalid entries');
+        if (parsed.accounts && Array.isArray(parsed.accounts) && parsed.accounts.length) {
+          accounts = parsed.accounts;
+          saveAccounts(accounts);
+          activeAccountId = accounts[0].id;
+        }
+        entries = imported.map(function (en) {
+          return en.accountId ? en : Object.assign({}, en, { accountId: accounts[0].id });
+        });
+        saveEntries(entries);
+        statusEl.textContent = imported.length + ' Buchungen wiederhergestellt.';
+        statusEl.style.color = 'var(--income)';
+        statusEl.style.display = 'block';
+        refreshDataViews();
+      } catch (err) {
+        statusEl.textContent = 'Datei konnte nicht gelesen werden.';
+        statusEl.style.color = 'var(--expense)';
+        statusEl.style.display = 'block';
+      }
+      setTimeout(function () { statusEl.style.display = 'none'; }, 4000);
+    };
+    reader.readAsText(file);
+  });
+
+  // ---------- Init ----------
+  try {
+    if (!storageAvailable) {
+      document.getElementById('storage-warning').style.display = 'block';
+    }
+    document.getElementById('f-date').value = todayISO();
+    rebuildCategorySelect();
+    refreshDataViews();
+    renderGame();
+  } catch (err) {
+    document.body.innerHTML =
+      '<div style="max-width:600px; margin:60px auto; padding:20px; font-family:sans-serif; color:#A83A32;">' +
+      '<h2 style="margin-top:0;">Etwas ist beim Start schiefgelaufen</h2>' +
+      '<p style="color:#333;">Bitte diese Datei direkt im Browser öffnen (nicht in einer eingebetteten Vorschau). Fehlermeldung:</p>' +
+      '<pre style="white-space:pre-wrap; background:#f4f4f4; padding:12px; border-radius:6px; font-size:12px;">' +
+      esc(err && err.message ? err.message : String(err)) + '</pre></div>';
+  }
+})();
+</script>
+</body>
+</html>
