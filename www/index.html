@@ -25,31 +25,48 @@
     --hud-muted: #9B9282;
     --cell-idle: #3B8F5C;
     --signal: #E1483F;
+    --income-solid: #2F6E51;
+    --expense-solid: #A83A32;
+    --hover: rgba(0,0,0,0.03);
+    --input-bg: #fff;
+    color-scheme: light;
     box-sizing: border-box;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --paper: #171A16;
-      --card: #21251F;
-      --ink: #EEF0E7;
-      --ink-muted: #9CA394;
-      --line: #3A3F35;
-      --income-bg: #1E2B23;
-      --expense-bg: #2E211E;
+      --paper: #121511;
+      --card: #1B1F1A;
+      --ink: #ECEFE6;
+      --ink-muted: #9AA291;
+      --line: #333930;
+      --income: #5CC08E;
+      --expense: #F0786D;
+      --income-bg: #1A2A20;
+      --expense-bg: #2D1F1C;
+      --arcade-border: #3A352D;
+      --hover: rgba(255,255,255,0.05);
+      --input-bg: #252A23;
+      color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    --paper: #171A16;
-    --card: #21251F;
-    --ink: #EEF0E7;
-    --ink-muted: #9CA394;
-    --line: #3A3F35;
-    --income-bg: #1E2B23;
-    --expense-bg: #2E211E;
+    --paper: #121511;
+    --card: #1B1F1A;
+    --ink: #ECEFE6;
+    --ink-muted: #9AA291;
+    --line: #333930;
+    --income: #5CC08E;
+    --expense: #F0786D;
+    --income-bg: #1A2A20;
+    --expense-bg: #2D1F1C;
+    --arcade-border: #3A352D;
+    --hover: rgba(255,255,255,0.05);
+    --input-bg: #252A23;
+    color-scheme: dark;
   }
-  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); background: var(--paper); }
   * { box-sizing: border-box; }
   body {
     margin: 0;
@@ -90,15 +107,15 @@
   .type-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
   .type-btn { flex: 1; border-radius: 999px; padding: 8px 0; font-size: 14px; font-weight: 500; cursor: pointer; background: transparent; transition: all 0.15s ease; }
   .type-btn.einnahme { border: 1px solid var(--income); color: var(--income); }
-  .type-btn.einnahme.active { background: var(--income); color: #fff; }
+  .type-btn.einnahme.active { background: var(--income-solid); border-color: var(--income-solid); color: #fff; }
   .type-btn.ausgabe { border: 1px solid var(--expense); color: var(--expense); }
-  .type-btn.ausgabe.active { background: var(--expense); color: #fff; }
+  .type-btn.ausgabe.active { background: var(--expense-solid); border-color: var(--expense-solid); color: #fff; }
 
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
   .col-span-2 { grid-column: span 2; }
   label { display: block; font-size: 12px; margin-bottom: 4px; color: var(--ink-muted); }
   input[type="text"], input[type="date"], select {
-    width: 100%; border-radius: 6px; padding: 8px 12px; font-size: 14px; border: 1px solid var(--line); background: #fff;
+    width: 100%; border-radius: 6px; padding: 8px 12px; font-size: 14px; border: 1px solid var(--line); background: var(--input-bg); color: var(--ink);
   }
   .btn-primary { width: 100%; border-radius: 6px; padding: 10px 0; font-size: 14px; font-weight: 500; background: var(--ink); color: var(--paper); border: none; cursor: pointer; }
   .btn-outline { border-radius: 6px; padding: 8px 0; font-size: 14px; font-weight: 500; background: transparent; color: var(--ink); border: 1px solid var(--line); cursor: pointer; }
@@ -106,8 +123,8 @@
 
   .pill-toggle { display: flex; gap: 4px; font-size: 12px; }
   .pill-toggle button { padding: 4px 10px; border-radius: 999px; cursor: pointer; background: transparent; border: 1px solid var(--line); color: var(--ink-muted); }
-  .pill-toggle button.active.ausgabe { background: var(--expense); color: #fff; border-color: var(--expense); }
-  .pill-toggle button.active.einnahme { background: var(--income); color: #fff; border-color: var(--income); }
+  .pill-toggle button.active.ausgabe { background: var(--expense-solid); color: #fff; border-color: var(--expense-solid); }
+  .pill-toggle button.active.einnahme { background: var(--income-solid); color: #fff; border-color: var(--income-solid); }
 
   .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
   .bar-row .cat-name { font-size: 14px; width: 110px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -120,7 +137,7 @@
   th.num-col { text-align: right; }
   td { padding: 8px 12px; border-bottom: 1px solid var(--line); }
   td.num { text-align: right; }
-  tr:hover td { background: rgba(0,0,0,0.02); }
+  tr:hover td { background: var(--hover); }
   .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
   .del-btn { opacity: 0.55; background: none; border: none; cursor: pointer; color: var(--expense); }
   .del-btn:hover { opacity: 1; }
@@ -137,11 +154,19 @@
   }
   .tap-cell.active { background: var(--signal); border-color: var(--signal); animation: tapPulse 0.4s ease-in-out infinite alternate; }
 
+  .theme-row { display: flex; justify-content: flex-end; gap: 4px; margin-bottom: 12px; }
+  .theme-btn { padding: 4px 10px; font-size: 12px; border-radius: 999px; cursor: pointer; background: transparent; color: var(--ink-muted); border: 1px solid var(--line); }
+  .theme-btn.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
   .footer-credit { text-align: center; margin-top: 40px; font-size: 10px; color: var(--ink-muted); opacity: 0.6; }
 </style>
 </head>
 <body>
 <div class="container">
+  <div class="theme-row" id="theme-toggle" role="group" aria-label="Darstellung">
+    <button class="theme-btn" data-theme-mode="light">Hell</button>
+    <button class="theme-btn" data-theme-mode="dark">Dunkel</button>
+    <button class="theme-btn" data-theme-mode="system">System</button>
+  </div>
   <div id="header"></div>
 
   <div id="storage-warning" style="display:none; background:var(--expense-bg); color:var(--expense); border-radius:8px; padding:10px 14px; font-size:12px; margin-bottom:16px;">
@@ -159,7 +184,7 @@
   <div id="panel-buch" class="panel">
     <div id="summary-cards" class="grid-2"></div>
 
-    <form id="entry-form" class="card">
+    <div id="entry-form" class="card">
       <div class="type-toggle">
         <button type="button" class="type-btn ausgabe active" data-type="ausgabe">Ausgabe</button>
         <button type="button" class="type-btn einnahme" data-type="einnahme">Einnahme</button>
@@ -182,13 +207,14 @@
           <select id="f-category"></select>
         </div>
         <div class="col-span-2" id="f-custom-wrap" style="display:none;">
-          <label>Sonstiges — was genau?</label>
+          <label>Sonstiges — was genau? (optional)</label>
           <input type="text" id="f-custom" placeholder="z. B. Spende, Reparatur …" />
         </div>
       </div>
       <div id="f-error" class="error-text" style="display:none;"></div>
-      <button type="submit" class="btn-primary">Buchung hinzufügen</button>
-    </form>
+      <button type="button" class="btn-primary" id="btn-submit">Buchung hinzufügen</button>
+      <button type="button" id="btn-cancel-edit" class="btn-outline" style="display:none; width:100%; margin-top:8px;">Abbrechen</button>
+    </div>
 
     <div id="category-breakdown"></div>
 
@@ -205,6 +231,7 @@
     </div>
 
     <h2>Buchungen</h2>
+    <select id="f-month" style="margin-bottom:10px;"></select>
     <input type="text" id="f-search" placeholder="Buchungen suchen …" style="margin-bottom:10px;" />
     <div id="buchungen-table" style="margin-bottom: 12px;"></div>
 
@@ -302,6 +329,27 @@
     try { storageSet(BEST_TIME_KEY, String(v)); } catch (e) {}
   }
 
+  // ---------- Theme (hell / dunkel / system) ----------
+  var THEME_KEY = 'kontobuch-theme';
+  var themeMode = storageGet(THEME_KEY);
+  if (themeMode !== 'light' && themeMode !== 'dark') themeMode = 'system';
+  function applyTheme() {
+    var root = document.documentElement;
+    if (themeMode === 'system') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', themeMode);
+    document.querySelectorAll('.theme-btn').forEach(function (b) {
+      b.classList.toggle('on', b.getAttribute('data-theme-mode') === themeMode);
+    });
+  }
+  document.getElementById('theme-toggle').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-theme-mode]');
+    if (!b) return;
+    themeMode = b.getAttribute('data-theme-mode');
+    storageSet(THEME_KEY, themeMode);
+    applyTheme();
+  });
+  applyTheme();
+
   // ---------- Helpers ----------
   var INCOME_CATEGORIES = ['Gehalt', 'Freelance', 'Verkauf', 'Geschenk', 'Sonstiges'];
   var EXPENSE_CATEGORIES = ['Miete', 'Lebensmittel', 'Transport', 'Freizeit', 'Versicherung', 'Gesundheit', 'Sonstiges'];
@@ -309,7 +357,16 @@
   function fmt(n) {
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n);
   }
-  function todayISO() { return new Date().toISOString().slice(0, 10); }
+  function todayISO() {
+    var n = new Date();
+    return n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-' + String(n.getDate()).padStart(2, '0');
+  }
+  function parseAmount(str) {
+    var t = String(str).trim().replace(/\s/g, '').replace(/€/g, '');
+    if (t.indexOf(',') !== -1) t = t.replace(/\./g, '').replace(',', '.');
+    else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+    return parseFloat(t);
+  }
   function fmtDate(iso) {
     var d = new Date(iso + 'T00:00:00');
     return new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
@@ -340,6 +397,8 @@
   var confirmDeleteAccountTimer = null;
   var showAddAccountForm = false;
   var searchQuery = '';
+  var monthFilter = 'all';
+  var editingId = null;
 
   // migrate entries saved before multi-account support existed
   (function migrateEntries() {
@@ -394,7 +453,7 @@
 
   function computeBreakdown() {
     var map = {};
-    currentEntries().filter(function (e) { return e.type === breakdownTab; }).forEach(function (e) {
+    currentEntries().filter(function (e) { return e.type === breakdownTab && inMonth(e); }).forEach(function (e) {
       map[e.category] = (map[e.category] || 0) + e.amount;
     });
     var list = Object.keys(map).map(function (k) { return { category: k, total: map[k] }; });
@@ -444,14 +503,14 @@
         '<button data-account="' + acc.id + '" style="border-radius:999px; padding:6px 14px; font-size:13px; cursor:pointer; border:1px solid ' + (isActive ? 'var(--ink)' : 'var(--line)') + '; background:' + (isActive ? 'var(--ink)' : 'transparent') + '; color:' + (isActive ? 'var(--paper)' : 'var(--ink-muted)') + ';">' + esc(acc.name) + '</button>';
       if (accounts.length > 1) {
         html += pendingDelete
-          ? '<button data-confirm-delete-account="' + acc.id + '" style="background:var(--expense); border:none; color:#fff; cursor:pointer; font-size:11px; padding:5px 8px; border-radius:999px;">Wirklich?</button>'
+          ? '<button data-confirm-delete-account="' + acc.id + '" style="background:var(--expense-solid); border:none; color:#fff; cursor:pointer; font-size:11px; padding:5px 8px; border-radius:999px;">Wirklich?</button>'
           : '<button data-delete-account="' + acc.id + '" aria-label="Konto löschen" style="background:none; border:none; color:var(--ink-muted); cursor:pointer; font-size:13px; padding:4px;">✕</button>';
       }
       html += '</div>';
     });
     html += showAddAccountForm
       ? '<span style="display:flex; gap:4px; align-items:center;">' +
-        '<input type="text" id="new-account-name" placeholder="Kontoname" style="width:120px; border-radius:6px; padding:6px 10px; font-size:13px; border:1px solid var(--line); background:#fff;" />' +
+        '<input type="text" id="new-account-name" placeholder="Kontoname" style="width:120px; border-radius:6px; padding:6px 10px; font-size:13px; border:1px solid var(--line); background:var(--input-bg); color:var(--ink);" />' +
         '<button id="btn-confirm-add-account" style="border-radius:999px; padding:6px 12px; font-size:13px; cursor:pointer; border:none; background:var(--ink); color:var(--paper);">OK</button>' +
         '</span>'
       : '<button id="btn-add-account" style="border-radius:999px; padding:6px 14px; font-size:13px; cursor:pointer; border:1px dashed var(--line); background:transparent; color:var(--ink-muted);">+ Konto</button>';
@@ -485,11 +544,50 @@
   }
 
   // ---------- Rendering: Kontobuch ----------
+  function inMonth(e) { return monthFilter === 'all' || e.date.slice(0, 7) === monthFilter; }
+
+  function renderMonthFilter() {
+    var sel = document.getElementById('f-month');
+    var months = {};
+    currentEntries().forEach(function (e) { months[e.date.slice(0, 7)] = true; });
+    var list = Object.keys(months).sort().reverse();
+    if (monthFilter !== 'all' && list.indexOf(monthFilter) === -1) monthFilter = 'all';
+    sel.innerHTML = '<option value="all">Alle Monate</option>' + list.map(function (m) {
+      return '<option value="' + m + '">' + fmtMonth(m) + '</option>';
+    }).join('');
+    sel.value = monthFilter;
+  }
+
   function renderSummary() {
-    var l = computeLedger();
+    var inc = 0, exp = 0;
+    currentEntries().filter(inMonth).forEach(function (e) { if (e.type === 'einnahme') inc += e.amount; else exp += e.amount; });
     document.getElementById('summary-cards').innerHTML =
-      '<div class="stat-box" style="background:var(--income-bg);"><div class="label" style="color:var(--income);">Einnahmen</div><div class="value" style="color:var(--income);">' + fmt(l.totalIncome) + '</div></div>' +
-      '<div class="stat-box" style="background:var(--expense-bg);"><div class="label" style="color:var(--expense);">Ausgaben</div><div class="value" style="color:var(--expense);">' + fmt(l.totalExpense) + '</div></div>';
+      '<div class="stat-box" style="background:var(--income-bg);"><div class="label" style="color:var(--income);">Einnahmen</div><div class="value" style="color:var(--income);">' + fmt(inc) + '</div></div>' +
+      '<div class="stat-box" style="background:var(--expense-bg);"><div class="label" style="color:var(--expense);">Ausgaben</div><div class="value" style="color:var(--expense);">' + fmt(exp) + '</div></div>';
+  }
+
+  function startEdit(id) {
+    var en = entries.filter(function (x) { return x.id === id; })[0];
+    if (!en) return;
+    editingId = id;
+    type = en.type;
+    document.querySelectorAll('.type-btn').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-type') === type); });
+    rebuildCategorySelect();
+    var sel = document.getElementById('f-category');
+    if (currentCategories().indexOf(en.category) !== -1) { sel.value = en.category; toggleCustomField(); }
+    else { sel.value = 'Sonstiges'; toggleCustomField(); document.getElementById('f-custom').value = en.category; }
+    document.getElementById('f-description').value = en.description;
+    document.getElementById('f-amount').value = String(en.amount).replace('.', ',');
+    document.getElementById('f-date').value = en.date;
+    document.getElementById('btn-submit').textContent = 'Änderung speichern';
+    document.getElementById('btn-cancel-edit').style.display = 'block';
+    document.getElementById('entry-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function stopEdit() {
+    editingId = null;
+    document.getElementById('btn-submit').textContent = 'Buchung hinzufügen';
+    document.getElementById('btn-cancel-edit').style.display = 'none';
   }
 
   function currentCategories() { return type === 'einnahme' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES; }
@@ -543,8 +641,9 @@
     var shown = q ? l.rows.filter(function (r) {
       return (r.description + ' ' + r.category).toLowerCase().indexOf(q) !== -1;
     }) : l.rows;
+    shown = shown.filter(inMonth);
     if (shown.length === 0) {
-      el.innerHTML = '<div class="empty-box">Keine Treffer für „' + esc(searchQuery) + '“.</div>';
+      el.innerHTML = '<div class="empty-box">' + (q ? 'Keine Treffer für „' + esc(searchQuery) + '“.' : 'Keine Buchungen in diesem Monat.') + '</div>';
       document.getElementById('reset-section').style.display = 'block';
       return;
     }
@@ -556,7 +655,7 @@
         '<td class="num" style="color:var(--income);">' + (r.type === 'einnahme' ? fmt(r.amount) : '') + '</td>' +
         '<td class="num" style="color:var(--expense);">' + (r.type === 'ausgabe' ? fmt(r.amount) : '') + '</td>' +
         '<td class="num" style="font-weight:600;">' + fmt(r.runningBalance) + '</td>' +
-        '<td style="text-align:right;"><button class="del-btn" data-delete="' + r.id + '" aria-label="Buchung löschen">✕</button></td>' +
+        '<td style="text-align:right; white-space:nowrap;"><button class="del-btn" data-edit="' + r.id + '" aria-label="Buchung bearbeiten" style="color:var(--ink-muted);">✎</button> <button class="del-btn" data-delete="' + r.id + '" aria-label="Buchung löschen">✕</button></td>' +
         '</tr>';
     }).join('');
     el.innerHTML = '<div class="table-wrap"><table><thead><tr>' +
@@ -566,6 +665,7 @@
   }
 
   function refreshDataViews() {
+    renderMonthFilter();
     renderHeader();
     renderAccounts();
     renderSummary();
@@ -765,7 +865,7 @@
     var errEl = document.getElementById('f-error');
 
     var description = descEl.value.trim();
-    var amt = parseFloat(String(amtEl.value).replace(',', '.'));
+    var amt = parseAmount(amtEl.value);
     var date = dateEl.value || todayISO();
     var category = catEl.value;
 
@@ -773,13 +873,18 @@
 
     if (!description) { showErr('Bitte eine Beschreibung eintragen.'); return; }
     if (!amt || amt <= 0) { showErr('Bitte einen Betrag größer als 0 eintragen.'); return; }
-    if (category === 'Sonstiges' && !customEl.value.trim()) { showErr('Bitte kurz angeben, was "Sonstiges" ist.'); return; }
+    
 
-    var finalCategory = category === 'Sonstiges' ? customEl.value.trim() : category;
-    entries.push({
-      id: uid(), date: date, description: description, category: finalCategory, type: type,
-      amount: Math.round(amt * 100) / 100, accountId: activeAccountId,
-    });
+    var finalCategory = category === 'Sonstiges' ? (customEl.value.trim() || 'Sonstiges') : category;
+    var amount = Math.round(amt * 100) / 100;
+    if (editingId) {
+      entries = entries.map(function (en) {
+        return en.id === editingId ? Object.assign({}, en, { date: date, description: description, category: finalCategory, type: type, amount: amount }) : en;
+      });
+      stopEdit();
+    } else {
+      entries.push({ id: uid(), date: date, description: description, category: finalCategory, type: type, amount: amount, accountId: activeAccountId });
+    }
     saveEntries(entries);
 
     descEl.value = ''; amtEl.value = ''; customEl.value = '';
@@ -796,9 +901,12 @@
   });
 
   document.getElementById('buchungen-table').addEventListener('click', function (e) {
+    var ed = e.target.closest('[data-edit]');
+    if (ed) { startEdit(ed.getAttribute('data-edit')); return; }
     var btn = e.target.closest('[data-delete]');
     if (!btn) return;
     var id = btn.getAttribute('data-delete');
+    if (editingId === id) stopEdit();
     entries = entries.filter(function (en) { return en.id !== id; });
     saveEntries(entries);
     refreshDataViews();
@@ -870,6 +978,28 @@
   document.getElementById('btn-export').addEventListener('click', function () {
     var payload = { exportedAt: new Date().toISOString(), accounts: accounts, entries: entries };
     saveFile('kontobuch-backup-' + todayISO() + '.json', JSON.stringify(payload, null, 2));
+  });
+
+  function triggerSubmit() {
+    document.getElementById('entry-form').dispatchEvent(new Event('submit', { cancelable: true }));
+  }
+  document.getElementById('btn-submit').addEventListener('click', triggerSubmit);
+  ['f-description', 'f-amount', 'f-date', 'f-custom'].forEach(function (id) {
+    document.getElementById(id).addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); triggerSubmit(); }
+    });
+  });
+
+  document.getElementById('f-month').addEventListener('change', function (e) {
+    monthFilter = e.target.value;
+    renderSummary(); renderBreakdown(); renderTable();
+  });
+
+  document.getElementById('btn-cancel-edit').addEventListener('click', function () {
+    stopEdit();
+    ['f-description', 'f-amount', 'f-custom'].forEach(function (i) { document.getElementById(i).value = ''; });
+    document.getElementById('f-date').value = todayISO();
+    document.getElementById('f-error').style.display = 'none';
   });
 
   document.getElementById('f-search').addEventListener('input', function (e) {
